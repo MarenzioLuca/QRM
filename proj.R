@@ -1,43 +1,18 @@
 library(haven)
 terrorism = read_sav("ZA6643_v4-0-0.sav")
 
-terrorism$treatment = ifelse(terrorism$p1 > 7, 1, 0)
-table(terrorism$isocntry, terrorism$treatment)
-prima = subset(terrorism, terrorism$treatment==0)
-dopo = subset(terrorism, terrorism$treatment==1)
+countries = subset (terrorism, isocntry == "RO" | isocntry == "HU" | isocntry == "SE" |
+                    isocntry == "DK" | isocntry == "IT" | isocntry == "PT", c(p1, isocntry, qa17a, qd8_5,
+                                                                              d10, d11, d60,
+                                                                              d63))
+countries$treatment = ifelse(countries$p1>7, 1, 0)
+countries$type = ifelse(countries$isocntry == "RO" | countries$isocntry == "HU", "New", ifelse(countries$isocntry == "IT" | countries$isocntry == "PT", "Rebuilt", "Old"))
+new = subset (countries, type =="New")
+old = subset (countries, type =="Old")
+rebuilt = subset (countries, type =="Rebuilt")
 
-#qa17a
+lm(new$qa17a ~ new$treatment + new$d60) # nuove democrazie - i poveri sono leggermente più disillusi, perché se si alza di 1 d60 (se è più ricco) si abbassa il "livello di disillusione" qa17a. In linea con Acemoglu e l'opportunity cost della rivoluzione.
+lm(old$qa17a ~ old$treatment + old$d60) # vecchie - qui di più
+lm(rebuilt$qa17a ~ rebuilt$treatment + rebuilt$d60) #ricostruite - soprattutto qui i poveri sono più disillusi
 
-left= terrorism$d1<4
-tl = mean (terrorism$qa17a[left & terrorism$treatment==1], na.rm=TRUE)
-
-itabel = subset(terrorism, terrorism$isocntry == "IT" | terrorism$isocntry == "BE")
-itabel$d1
-france = subset(terrorism, terrorism$isocntry == "FR" )
-
-
-table(terrorism$d70, terrorism$treatment)
-mean(terrorism$d70[terrorism$treatment==0], na.rm=TRUE)
-mean(terrorism$d70[terrorism$treatment==1], na.rm=TRUE)
-
-# social media, città
-terrorism$qe5a
-mean (terrorism$qe5a[terrorism$treatment==0], na.rm=TRUE)
-mean (terrorism$qe5a[terrorism$treatment==1], na.rm=TRUE)
-
-# voce
-terrorism$d72_2
-mean (terrorism$d72_2[terrorism$treatment==0], na.rm=TRUE)
-mean (terrorism$d72_2[terrorism$treatment==1], na.rm=TRUE)
-
-# valore
-mean (terrorism$qd8_5[terrorism$treatment==0], na.rm=TRUE)
-mean (terrorism$qd8_5[terrorism$treatment==1], na.rm=TRUE)
-
-table (C(prima$qd8_1, prima$qd8_2), )
-
-#identità
-
-#internet
-mean (itabel$d62_1[itabel$treatment==0], na.rm=TRUE)
-mean (itabel$d62_1[itabel$treatment==1], na.rm=TRUE)
+# Ricorda Edmund Burke. Chi sta bene, paesi vecchi anche in questo caso, vogliono lo status quo.
