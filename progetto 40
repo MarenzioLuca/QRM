@@ -1,0 +1,76 @@
+## importo dataset, creo dicotomiche, cambio etichette variabili, creo subset, riconduco a un'unica categoria gli stati per cui ne esistono due (GBR e DEU), adotto codice a tre lettere 
+## anche per il primo subset, così da poterlo unire con il secondo --> merge
+library(haven)
+terrorism <- read_sav("ZA6643_v4-0-0.sav")
+
+democracy <- read.csv("democracy-index-eiu.csv")
+head(democracy)
+table(terrorism$p2r[terrorism$p1 == 7])
+terrorism$treatment <- ifelse(terrorism$p1 > 7, 1, 0)
+terrorism$dem <- ifelse(terrorism$qa17a < 3, 1, 0)
+
+names(terrorism)[names(terrorism) == "qd8_5"] <- "dem2"
+names(terrorism)[names(terrorism) == "d1"] <- "ideology"
+names(terrorism)[names(terrorism) == "d10"] <- "gender"
+names(terrorism)[names(terrorism) == "d11"] <- "age"
+names(terrorism)[names(terrorism) == "d8"] <- "education"
+names(terrorism)[names(terrorism) == "d25"] <- "community"
+names(terrorism)[names(terrorism) == "d60"] <- "bills"
+names(democracy)[names(democracy) == "Democracy.score"] <- "demscore"
+
+sub.terrorism <- terrorism[terrorism$isocntry != "CY-TCC", c("isocntry", "dem", "dem2", "treatment", "education", "age", "gender", "ideology", "bills", "community")]
+sub.democracy <- democracy[, c("Code", "demscore")]
+
+sub.terrorism$isocntry <- ifelse(sub.terrorism$isocntry == "DE-E" | sub.terrorism$isocntry == "DE-W", "DE", sub.terrorism$isocntry)
+sub.terrorism$isocntry <- ifelse(sub.terrorism$isocntry == "GB-GBN" | sub.terrorism$isocntry == "GB-NIR", "GB", sub.terrorism$isocntry)
+
+install.packages("countrycode")
+library(countrycode)
+sub.terrorism$Code <- countrycode(sub.terrorism$isocntry, origin = 'iso2c', destination = 'iso3c')
+
+td <- merge(sub.terrorism, sub.democracy)
+
+## TEST IPOTESI
+## guardare p-value, intervallo di confidenza, coefficiente angolare della variabile "treatment", coefficiente di determinazione, barplot
+
+## ---- H1a:  Un attacco terroristico impatta sulla soddisfazione democratica.
+prop.test(table(td$treatment, td$dem))
+lm(dem ~ treatment, data = td)
+
+prop.table(table(td$treatment, td$dem), 1)
+tab.dem <- prop.table(table(td$treatment, td$dem), 1)
+barplot(t(tab.dem),
+        beside = TRUE,
+        main = "Terrorist attacks and individual satisfaction for democracy",
+        xlab = "Terrorist attack",
+        ylab = "Democratic satisfaction",
+        xlim = c(0, 5),
+        ylim = c(0, .6),
+        col = c("grey", "red"),
+        width = 0.5,
+        names.arg = c("No", "Yes"),
+        legend.text = c("Low", "High"),
+        args.legend = list(5, 0.4,
+                           inset = -.27,
+                           title = "Democratic satisfaction"))
+
+## ---- H1b:  Un attacco terroristico impatta sul supporto alla democrazia come valore.
+prop.test(table(td$treatment, td$dem2))        
+lm(dem2 ~ treatment, data = td)
+
+tab.dem2 <- prop.table(table(td$treatment, td$dem2), 1)
+barplot(t(tab.dem2),
+        beside = TRUE,
+        main = "Terrorist attacks and support for democracy as a value",
+        xlab = "Terrorist attack",
+        ylab = "Democratic value",
+        xlim = c(0, 5),
+        ylim = c(0, .8),
+        col = c("grey", "red"),
+        width = 0.5,
+        names.arg = c("No", "Yes"),
+        legend.text = c("No", "Yes"),
+        args.legend = list(5, 0.6,
+                           inset = -.27,
+                           title = "Democracy as value"))
+ abline(h = 0.2431051, lty = 2)  
