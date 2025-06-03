@@ -163,6 +163,10 @@ legend("bottomright", legend = c("Prediction line", "Confidence bands", "ATE = 0
        cex = 0.6)
 abline(h = 0, col = "red", lty = 3)
 
+```
+
+
+```{r}
 # H2b
 fit.h2b.controls <- lm(dem2 ~ treatment * demscore + education + bills + ideology + age + gender + community + bordering, data = td)
 summary(fit.h2b.controls)
@@ -175,7 +179,10 @@ pred.diff.h2b <- predict(fit.h2b, interval = "confidence", newdata = treat.h2b) 
 
 # Grafico H2b
 plot(treat.h2b$demscore, pred.diff.h2b[, "fit"], type = "l",
-     ylim = c(-0.03, 0.01))
+     ylim = c(-0.03, 0.01),
+     xlab = "Democracy score",
+     ylab = "ATE - dmocracy: personal value",
+     main = "Terrorism and democracy as a personal value by country's democracy score")
 lines(treat.h2b$demscore, pred.diff.h2b[, "lwr"], col = "red", lty = 5)
 lines(treat.h2b$demscore, pred.diff.h2b[, "upr"], col = "red", lty = 5)
 legend("bottomright", legend = c("Prediction line", "Confidence bands", "ATE = 0"), 
@@ -184,17 +191,22 @@ legend("bottomright", legend = c("Prediction line", "Confidence bands", "ATE = 0
        cex = 0.7)
 abline(h = 0, lty = 3)
 
+```
 
-## TAVOLA RISULTATI
+TABELLA RISULTATI
+```{r}
+
 library(modelsummary)
 models <- list(
-  "Model 1" = fit.h1a,
-  "Model 2" = fit.h1b,
-  "Model 3" = fit.h2a.controls,
-  "Model 4" = fit.h2b.controls
+  "Model 1" = fit.h1a.nocntrl,
+  "Model 2" = fit.h2a.nocntrl,
+  "Model 3" = fit.h2a,
+  "Model 4" = fit.h1b.nocntrl,
+  "Model 5" = fit.h2b
 )
 modelsummary(models, estimate = "{estimate}{stars}",
              coef_omit = "Intercept",
              statistic = "({std.error})",
              output = "markdown")
+
 
