@@ -30,8 +30,27 @@ sub.terrorism$Code <- countrycode(sub.terrorism$isocntry, origin = 'iso2c', dest
 
 td <- merge(sub.terrorism, sub.democracy)
 
-## TEST IPOTESI
 td$bordering <- ifelse(td$Code == "ITA" | td$Code == "BEL" |td$Code == "LUX" |td$Code == "DEU" |td$Code == "ESP", 1, 0)
+
+## STATISTICA DESCRITTIVA
+
+descr <- function(x){
+  mean.out <- round(mean(x, na.rm = TRUE), 2)
+  sd.out <- round(sd(x, na.rm = TRUE), 2)
+  min.out <- min(x, na.rm = TRUE)
+  max.out <- max(x, na.rm = TRUE)
+  out <- c(mean.out, sd.out, min.out, max.out)
+  names(out) <- c("Mean", "SD", "Min", "Max")
+  return(out)
+}
+Variables <- c("Democratic support: satisfaction", "Democratic support: personal value", "Terrorist attack (treatment)", "Democracy score (country)", "Age", "Difficulty paying the bills", "Gender", "Left-righ self placement",  "Place of residence", "Years of education", "Bordering with France (country)")
+
+mat.variables <- cbind(Variables, rbind(descr(td$dem), descr(td$dem2), descr(td$treatment), descr(td$demscore), descr(td$age), descr(td$bills), descr(td$gender), descr(td$ideology), descr(td$community), descr(td$education), descr(td$bordering)))
+library(knitr)
+kable(mat.variables, digits = 2)
+
+
+## TEST IPOTESI
 
 # H1a
 summary(lm(dem ~ treatment, data = td))
@@ -52,7 +71,7 @@ par(mfrow = c(1, 2))
 
 barplot(t(tab.dem),
         beside = TRUE,
-        main = "Terrorist attacks and individual satisfaction for democracy",
+        main = "Terrorism and individual satisfaction for democracy",
         xlab = "Terrorist attack",
         ylab = "Democratic satisfaction",
         xlim = c(0, 5),
@@ -63,12 +82,13 @@ barplot(t(tab.dem),
         legend.text = c("Low", "High"),
         args.legend = list(5, 0.4,
                            inset = -.27,
-                           title = "Democratic satisfaction"))
+                           title = "Democratic satisfaction",
+                           cex = 0.7))
 barplot(t(tab.dem2),
         beside = TRUE,
-        main = "Terrorist attacks and support for democracy as a value",
+        main = "Terrorism and support for democracy as a value",
         xlab = "Terrorist attack",
-        ylab = "Democratic value",
+        ylab = "Democracy: personal value",
         xlim = c(0, 5),
         ylim = c(0, .8),
         col = c("grey", "red"),
@@ -77,20 +97,28 @@ barplot(t(tab.dem2),
         legend.text = c("No", "Yes"),
         args.legend = list(5, 0.6,
                            inset = -.27,
-                           title = "Democracy as value"))
- abline(h = 0.2431051, lty = 2)
-
+                           title = "Democracy:\n personal value",
+                           cex = 0.7))
+      
 # H2a
 fit.h2a.controls <- lm(dem ~ treatment * demscore + education + bills + ideology + age + gender + community + bordering, data = td)
 summary(fit.h2a.controls)
 ## H2a senza controlli
 fit.h2a.nocntrl <- lm(dem ~ treatment * demscore, data = td)
+summary(fit.h2a.nocntrl)
 t.h2a <- data.frame(demscore = seq(6, 9.5, 0.1), treatment = 1)
 c.h2a <- data.frame(demscore = seq(6, 9.5, 0.1), treatment = 0)
 pred.t.h2a <- predict(fit.h2a.nocntrl, newdata = t.h2a)
 pred.c.h2a <- predict(fit.h2a.nocntrl, newdata = c.h2a)
-plot(t.h2a$demscore, pred.t.h2a, type = "l")
+
+plot(t.h2a$demscore, pred.t.h2a, type = "l",
+     xlab = "Democracy score",
+     ylab = "Pred. democratic satisfaction",
+     main = "Terrorism and democratic satisfaction by country's democracy score")
 lines(t.h2a$demscore, pred.c.h2a, col = "red")
+legend("bottomright", legend = c("Terrorist attack", "No terrorist attack"), 
+       col = c("black", "red"),
+       lty = 1)
 ## controllo per ideologia, poi doppia interazione
 summary(lm(dem ~ treatment * demscore + ideology, data = td))
 fit.h2a <- lm(dem ~ treatment * demscore * ideology, data = td)
@@ -111,14 +139,28 @@ pred.diff.dx <- predict(fit.h2a, interval = "confidence", newdata = treat.h2.dx)
 par(mfrow = c(1, 2))
 
 plot(treat.h2.dx$demscore, pred.diff.sx[, "fit"], type = "l",
-     ylim = c(-0.11, 0.09))
+     ylim = c(-0.11, 0.09),
+     xlab = "Democracy score",
+     ylab = "ATE - democratic satisfaction",
+     main = "Left-centered individuals")
 lines(treat.h2.dx$demscore, pred.diff.sx[, "lwr"], col = "blue", lty = 5)
 lines(treat.h2.dx$demscore, pred.diff.sx[, "upr"], col = "blue", lty = 5)
+legend("bottomright", legend = c("Prediction line", "Confidence bands", "ATE = 0"), 
+       col = c("black", "blue", "red"),
+       lty = c(1, 5, 3),
+       cex = 0.6)
 abline(h = 0, col = "red", lty = 3)
 plot(treat.h2.dx$demscore, pred.diff.dx[, "fit"], type = "l",
-     ylim = c(-0.11, 0.09))
+     ylim = c(-0.11, 0.09),
+     xlab = "Democracy score",
+     ylab = "ATE - democratic satisfaction",
+     main = "Right-centered individuals")
 lines(treat.h2.dx$demscore, pred.diff.dx[, "lwr"], col = "blue", lty = 5)
 lines(treat.h2.dx$demscore, pred.diff.dx[, "upr"], col = "blue", lty = 5)
+legend("bottomright", legend = c("Prediction line", "Confidence bands", "ATE = 0"), 
+       col = c("black", "blue", "red"),
+       lty = c(1, 5, 3),
+       cex = 0.6)
 abline(h = 0, col = "red", lty = 3)
 
 # H2b
@@ -136,10 +178,14 @@ plot(treat.h2b$demscore, pred.diff.h2b[, "fit"], type = "l",
      ylim = c(-0.03, 0.01))
 lines(treat.h2b$demscore, pred.diff.h2b[, "lwr"], col = "red", lty = 5)
 lines(treat.h2b$demscore, pred.diff.h2b[, "upr"], col = "red", lty = 5)
+legend("bottomright", legend = c("Prediction line", "Confidence bands", "ATE = 0"), 
+       col = c("black", "red", "black"),
+       lty = c(1, 5, 3),
+       cex = 0.7)
 abline(h = 0, lty = 3)
 
 
-# tavola risultati
+## TAVOLA RISULTATI
 library(modelsummary)
 models <- list(
   "Model 1" = fit.h1a,
