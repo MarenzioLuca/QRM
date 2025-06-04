@@ -1,10 +1,8 @@
-## importo dataset, creo dicotomiche, cambio etichette variabili, creo subset, riconduco a un'unica categoria gli stati per cui ne esistono due (GBR e DEU), adotto codice a tre lettere 
-## anche per il primo subset, così da poterlo unire con il secondo --> merge
+```{r}
 library(haven)
 terrorism <- read_sav("ZA6643_v4-0-0.sav")
-
 democracy <- read.csv("democracy-index-eiu.csv")
-head(democracy)
+
 table(terrorism$p2r[terrorism$p1 == 7])
 terrorism$treatment <- ifelse(terrorism$p1 > 7, 1, 0)
 terrorism$dem <- ifelse(terrorism$qa17a < 3, 1, 0)
@@ -24,46 +22,79 @@ sub.democracy <- democracy[, c("Code", "demscore")]
 sub.terrorism$isocntry <- ifelse(sub.terrorism$isocntry == "DE-E" | sub.terrorism$isocntry == "DE-W", "DE", sub.terrorism$isocntry)
 sub.terrorism$isocntry <- ifelse(sub.terrorism$isocntry == "GB-GBN" | sub.terrorism$isocntry == "GB-NIR", "GB", sub.terrorism$isocntry)
 
-install.packages("countrycode")
 library(countrycode)
 sub.terrorism$Code <- countrycode(sub.terrorism$isocntry, origin = 'iso2c', destination = 'iso3c')
 
 td <- merge(sub.terrorism, sub.democracy)
 
-## TEST IPOTESI
-## guardare p-value, intervallo di confidenza, coefficiente angolare della variabile "treatment", coefficiente di determinazione, barplot
+td$bordering <- ifelse(td$Code == "ITA" | td$Code == "BEL" |td$Code == "LUX" |td$Code == "DEU" |td$Code == "ESP", 1, 0)
+```
 
-## ---- H1a:  Un attacco terroristico impatta sulla soddisfazione democratica.
+
+
+
+STATISTICA DESCRITTIVA
+```{r, echo = FALSE}
+descr <- function(x){
+  mean.out <- round(mean(x, na.rm = TRUE), 2)
+  sd.out <- round(sd(x, na.rm = TRUE), 2)
+  min.out <- min(x, na.rm = TRUE)
+  max.out <- max(x, na.rm = TRUE)
+  out <- c(mean.out, sd.out, min.out, max.out)
+  names(out) <- c("Mean", "SD", "Min", "Max")
+  return(out)
+}
+Variables <- c("Democratic support: satisfaction", "Democratic support: personal value", "Terrorist attack (treatment)", "Democracy score (country)", "Age", "Difficulty paying the bills", "Gender", "Left-righ self placement",  "Place of residence", "Years of education", "Bordering with France (country)")
+
+mat.variables <- cbind(Variables, rbind(descr(td$dem), descr(td$dem2), descr(td$treatment), descr(td$demscore), descr(td$age), descr(td$bills), descr(td$gender), descr(td$ideology), descr(td$community), descr(td$education), descr(td$bordering)))
+library(knitr)
+kable(mat.variables, digits = 2, caption = "Descriptive statistics.")
+```
+
+H1: Un attacco terroristico impatta sulla soddisfazione democratica più di quanto non lo faccia sul supporto alla democrazia come valore. 
+
+```{r}
+# H1a
+fit.h1a.nocntrl <- lm(dem ~ treatment, data = td)
+summary(lm(dem ~ treatment, data = td))
+fit.h1a <- lm(dem ~ treatment + age + gender + education + ideology + bordering, data = td)
+summary(fit.h1a)
+
 prop.test(table(td$treatment, td$dem))
-lm(dem ~ treatment, data = td)
-
-prop.table(table(td$treatment, td$dem), 1)
 tab.dem <- prop.table(table(td$treatment, td$dem), 1)
+
+# H1b
+fit.h1b.nocntrl <- lm(dem2 ~ treatment, data = td)
+summary(fit.h1b.nocntrl)
+fit.h1b <- lm(dem2 ~ treatment + age + gender + education + ideology + bordering, data = td)
+summary(fit.h1b)
+
+prop.test(table(td$treatment, td$dem2)) 
+tab.dem2 <- prop.table(table(td$treatment, td$dem2), 1)
+
+par(mfrow = c(1, 2))
+
 barplot(t(tab.dem),
         beside = TRUE,
-        main = "Terrorist attacks and individual satisfaction for democracy",
+        main = "Terrorism and individual satisfaction for democracy",
         xlab = "Terrorist attack",
         ylab = "Democratic satisfaction",
         xlim = c(0, 5),
-        ylim = c(0, .6),
+        ylim = c(0, .8),
         col = c("grey", "red"),
         width = 0.5,
         names.arg = c("No", "Yes"),
         legend.text = c("Low", "High"),
         args.legend = list(5, 0.4,
                            inset = -.27,
-                           title = "Democratic satisfaction"))
-
-## ---- H1b:  Un attacco terroristico impatta sul supporto alla democrazia come valore.
-prop.test(table(td$treatment, td$dem2))        
-lm(dem2 ~ treatment, data = td)
-
-tab.dem2 <- prop.table(table(td$treatment, td$dem2), 1)
+                           title = "Democratic satisfaction",
+                           cex = 0.7))
+mtext("Figure 1.", side = 1, line = 4, adj = 0, cex = 0.8, font = 3)
 barplot(t(tab.dem2),
         beside = TRUE,
-        main = "Terrorist attacks and support for democracy as a value",
+        main = "Terrorism and support for democracy as a value",
         xlab = "Terrorist attack",
-        ylab = "Democratic value",
+        ylab = "Democracy: personal value",
         xlim = c(0, 5),
         ylim = c(0, .8),
         col = c("grey", "red"),
@@ -72,5 +103,127 @@ barplot(t(tab.dem2),
         legend.text = c("No", "Yes"),
         args.legend = list(5, 0.6,
                            inset = -.27,
-                           title = "Democracy as value"))
- abline(h = 0.2431051, lty = 2)  
+                           title = "Democracy:\n personal value",
+                           cex = 0.7))
+mtext("Figure 2.", side = 1, line = 4, adj = 0, cex = 0.8, font = 3)
+      
+```
+
+H2: a una minore democraticità del paese di appartenenza corrisponde un maggiore impatto negativo dell'attentato sulla soddisfazione per il funzionamento della democrazia.
+
+```{r}
+fit.h2a <- lm(dem ~ treatment * demscore + education + ideology + age + gender + bordering, data = td)
+summary(fit.h2a)
+
+fit.h2a.nocntrl <- lm(dem ~ treatment * demscore, data = td)
+summary(fit.h2a.nocntrl)
+
+t.h2a <- data.frame(demscore = seq(6, 9.5, 0.1), treatment = 1)
+c.h2a <- data.frame(demscore = seq(6, 9.5, 0.1), treatment = 0)
+pred.t.h2a <- predict(fit.h2a.nocntrl, newdata = t.h2a)
+pred.c.h2a <- predict(fit.h2a.nocntrl, newdata = c.h2a)
+
+plot(t.h2a$demscore, pred.t.h2a, type = "l",
+     xlab = "Democracy score",
+     ylab = "Pred. democratic satisfaction",
+     main = "Terrorism and democratic satisfaction by country's democracy score")
+lines(t.h2a$demscore, pred.c.h2a, col = "red")
+legend("bottomright", legend = c("Terrorist attack", "No terrorist attack"), 
+       col = c("black", "red"),
+       lty = 1)
+mtext("Figure 3.", side = 1, line = 4, adj = 0, cex = 0.8, font = 3)
+```
+
+
+```{r}
+fit.h2a.id <- lm(dem ~ treatment * demscore * ideology + age + gender + education + bordering, data = td)
+summary(fit.h2a.id)
+fit.h2a.id.nocntrl <- lm(dem ~ treatment * demscore * ideology, data = td)
+summary(fit.h2a.id.nocntrl)
+
+mean(td$ideology[td$ideology < 6], na.rm = TRUE)
+mean(td$ideology[td$ideology > 5], na.rm = TRUE)
+treat.h2.sx <- data.frame(demscore = seq(6, 9.5, 0.1), ideology = 3.8, treatment = 1)
+cntrl.h2.sx <- data.frame(demscore = seq(6, 9.5, 0.1), ideology = 3.8, treatment = 0)
+treat.h2.dx <- data.frame(demscore = seq(6, 9.5, 0.1), ideology = 7.6, treatment = 1)
+cntrl.h2.dx <- data.frame(demscore = seq(6, 9.5, 0.1), ideology = 7.6, treatment = 0)
+
+pred.diff.sx <- predict(fit.h2a.id.nocntrl, interval = "confidence", newdata = treat.h2.sx) - predict(fit.h2a.id.nocntrl, interval = "confidence", newdata = cntrl.h2.sx) 
+pred.diff.dx <- predict(fit.h2a.id.nocntrl, interval = "confidence", newdata = treat.h2.dx) - predict(fit.h2a.id.nocntrl, interval = "confidence", newdata = cntrl.h2.dx)
+
+par(mfrow = c(1, 2))
+
+plot(treat.h2.dx$demscore, pred.diff.sx[, "fit"], type = "l",
+     ylim = c(-0.11, 0.09),
+     xlab = "Democracy score",
+     ylab = "ATE - democratic satisfaction",
+     main = "Left-centered individuals")
+lines(treat.h2.dx$demscore, pred.diff.sx[, "lwr"], col = "blue", lty = 5)
+lines(treat.h2.dx$demscore, pred.diff.sx[, "upr"], col = "blue", lty = 5)
+legend("bottomright", legend = c("Prediction line", "Confidence bands", "ATE = 0"), 
+       col = c("black", "blue", "red"),
+       lty = c(1, 5, 3),
+       cex = 0.6)
+abline(h = 0, col = "red", lty = 3)
+mtext("Figure 4.", side = 1, line = 4, adj = 0, cex = 0.8, font = 3)
+plot(treat.h2.dx$demscore, pred.diff.dx[, "fit"], type = "l",
+     ylim = c(-0.11, 0.09),
+     xlab = "Democracy score",
+     ylab = "ATE - democratic satisfaction",
+     main = "Right-centered individuals")
+lines(treat.h2.dx$demscore, pred.diff.dx[, "lwr"], col = "blue", lty = 5)
+lines(treat.h2.dx$demscore, pred.diff.dx[, "upr"], col = "blue", lty = 5)
+legend("bottomright", legend = c("Prediction line", "Confidence bands", "ATE = 0"), 
+       col = c("black", "blue", "red"),
+       lty = c(1, 5, 3),
+       cex = 0.6)
+abline(h = 0, col = "red", lty = 3)
+mtext("Figure 5. ", side = 1, line = 4, adj = 0, cex = 0.8, font = 3)
+
+```
+
+
+```{r}
+# H2b
+fit.h2b <- lm(dem2 ~ treatment * demscore + education + ideology + age + gender + bordering, data = td)
+summary(fit.h2b)
+fit.h2b.nocntrl <- lm(dem2 ~ treatment * demscore, data = td)
+summary(fit.h2b.nocntrl)
+treat.h2b <- data.frame(demscore = seq(5.5, 9.5, 0.1), treatment = 1)
+cntrl.h2b <- data.frame(demscore = seq(5.5, 9.5, 0.1), treatment = 0)
+
+pred.diff.h2b <- predict(fit.h2b.nocntrl, interval = "confidence", newdata = treat.h2b) - predict(fit.h2b.nocntrl, interval = "confidence", newdata = cntrl.h2b)
+
+# Grafico H2b
+plot(treat.h2b$demscore, pred.diff.h2b[, "fit"], type = "l",
+     ylim = c(-0.03, 0.01),
+     xlab = "Democracy score",
+     ylab = "ATE - democracy: personal value",
+     main = "Terrorism and democracy as a personal value by country's democracy score")
+lines(treat.h2b$demscore, pred.diff.h2b[, "lwr"], col = "red", lty = 5)
+lines(treat.h2b$demscore, pred.diff.h2b[, "upr"], col = "red", lty = 5)
+legend("bottomright", legend = c("Prediction line", "Confidence bands", "ATE = 0"), 
+       col = c("black", "red", "black"),
+       lty = c(1, 5, 3),
+       cex = 0.7)
+abline(h = 0, lty = 3)
+mtext("Figure 6.", side = 1, line = 4, adj = 0, cex = 0.8, font = 3)
+
+```
+
+TABELLA RISULTATI
+```{r, echo = FALSE}
+
+library(modelsummary)
+models <- list(
+  "Model 1" = fit.h1a,
+  "Model 2" = fit.h2a,
+  "Model 3" = fit.h2a.id,
+  "Model 4" = fit.h1b,
+  "Model 5" = fit.h2b
+)
+modelsummary(models, estimate = "{estimate}{stars}",
+             coef_omit = "Intercept",
+             statistic = "({std.error})",
+             title = "Regression models. Note: Models one, two and three are calculated on the dependent variable 'democratic satisfaction', while models four and five relate to the dependent variable 'democracy as a personal value'.",
+             output = "markdown") 
