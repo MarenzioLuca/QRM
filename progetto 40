@@ -1,10 +1,55 @@
-## importo dataset, creo dicotomiche, cambio etichette variabili, creo subset, riconduco a un'unica categoria gli stati per cui ne esistono due (GBR e DEU), adotto codice a tre lettere 
-## anche per il primo subset, così da poterlo unire con il secondo --> merge
+title: "Terrorist attacks and their effects on democratic support: a quasi-experimental analysis of the Bataclan case"
+author: "Andra Bazzani, Luca Maretto, Sergio Mastrangelo"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+In the past two and a half decades, European democracies have experienced numerous exogenous shocks, such as economic crises, migratory flows and terrorist attacks of jihadist nature.
+
+These events, despite varying in nature, represent substantial threats to stability and to the perceived security of citizens. The 9/11 2001 terrorist attacks symbolically marked the beginning of a new global era, characterized by asymmetric and transnational threats (Gros, 2002; Bigo, 2006). Since then, researchers have investigated the repercussions of terrorism on several political and social dimensions, such as institutional trust (Nägel et al., 2024), electoral behavior (Belcells & Torrats-Espinosa, 2018), attitudes towards immigrants (Ferrín et al., 2020). In doing so, considerable attention has been devoted to short-term effects as well as to the consequences of a prolonged exposure to terrorism (Peffley et al., 2015; Rehman & Vanin, 2018).
+
+Both short-term and long-term effects have been explored by scholars committed to uncovering the impact of terrorism on citizens’ attitudes towards democracy. In fact, that of terrorism is a particularly insidious role, as it aims directly at the institutions and the functioning of a democracy with the goal of undermining its legitimacy, destabilizing the consensus around it and creating internal confusion (Crenshaw, 2001; Wilkinson 2011). All this being given, in front of attacks of this kind a central and fundamental question emerges for political science:
+
+**How do terrorist attacks influence citizens’ support for democracy?**
+
+To answer this question, we first have to define what we mean with support for democracy. To do so, it is instrumental to recall David Easton (1975)’s conceptual distinction between specific support and diffuse support. The former refers to the support for democratic institutions’ day-to-day functioning, while the latter refers to a deeper, more stable attachment to the principles of a democratic regime. This distinction allowed for a broader analysis of collective reactions to traumatic events, highlighting how exogenous shocks can adversely impact the two dimensions of support (Norris, 2011).
+
+Numerous studies show that terrorist attacks can reduce public trust in institutions and reinforce authoritarian responses. Nägel, Nivette and Czymara (2024) find a decrease in institutional trust following jihadist attacks, especially in culturally vulnerable contexts. In their study, Echebarria-Echabe and Fernandez-Guede (2006) find an increase in the support for authoritarianism and a reduction of adhesion to liberal values in the country following the 2004 Madrid attacks. Andersen and Brym (2017) too, analyzing Tunisia after the 2015 Sousse terrorist attacks, find a reduction in the support for democracy and a general opening towards non-democratic forms of government.
+
+At the same time, other studies have put in evidence different or even opposite effects. As Van Hauwaert and Huber (2020) reveal, in fact, in the aftermath of the Paris and Saint Denis attacks of November 2015, citizens’ attachment to the principles of democracy was not shaken by the events, and it was instead strengthened by an increase in in-group solidarity following the attacks. The rally-around-the-flag effect as a result of a non-domestic threat has also been provided as an explanation for the rise of diffuse support for democracy in Greece and other bailed-out countries in the aftermath of the Eurozone crisis (Cordero & Simón, 2016).
+
+As a definitive answer is not provided regarding the direction of the change in democratic support following terrorist attacks, there is greater consensus on the non-uniformity of their effects, as they vary based on individual and institutional characteristics. Ferrín, Mancosu, and Cappiali (2020) found that more highly educated, left-leaning individuals tend to react with more disillusion to a terrorist attack, because of the high democratic standard that these individuals expect from their democratic government. Conversely, other studies (Chong and Gradstein, 2015; Stoetzer et al., 2024) highlight how those with more materialist values and a lower tolerance for uncertainty, are more prone to illiberal responses.
+
+As Svolik (2008) and Linz and Stepan (1996) observe, faced with political and economic adversities, citizens in regimes with a low democratic consolidation are more prone to tolerate illiberal measures in exchange for more order and safety, as in said regimes authoritarian responses enjoy greater legitimacy among their people. Complementing this, individuals tend to be more satisfied with democracy when they live in a context where democratic principles are protected (Christmann, 2018).
+
+In the face of the adversities of a terrorist attack, we believe that citizens of less-consolidated democracies will react more strongly against democracy, legitimizing more authoritarian responses. Thus, we want to measure how much the change in democratic support varies based on countries’ democratic consolidation.
+
+Hence the importance of democratic consolidation. To be more precise about the term’s definition we appeal to, Gunther, Diamandouros and Puhle (1995) define a consolidated democracy as when in a country "all politically significant groups regard its key political institutions as the only legitimate framework for political contestation, and adhere to democratic rules of the game”. Therefore, where democracies are less consolidated, it is more likely that the country will slip into some form of authoritarianism.
+
+In light of the above discussion, the present study aims at analyzing the impact of terrorist attacks on democratic support, developing the analysis on two fundamental dimensions:
+
+- Democratic support type (specific vs. diffuse);
+- The regimes’ democratic consolidation level.
+
+In spite of the vast academic literature on the link between terrorism and public opinion, and separately that of democratic consolidation, there is a gap we aim to fill of a systematization jointly considering these two dimensions.
+
+## Research hypotheses
+
+H1a: Terrorist attacks impact the satisfaction for democracy’s functioning.
+H1b: Terrorist attacks impact the support for democratic values.
+
+H2a: Terrorist attacks’ negative impact on democratic satisfaction is greater in regimes with a lower democratic consolidation.
+H2b: Terrorist attacks’ negative impact on support for democratic values is greater in regimes with a lower democratic consolidation.
+
+
+## Research design
+```{r, tidy = TRUE}
 library(haven)
 terrorism <- read_sav("ZA6643_v4-0-0.sav")
-
 democracy <- read.csv("democracy-index-eiu.csv")
-head(democracy)
+
 table(terrorism$p2r[terrorism$p1 == 7])
 terrorism$treatment <- ifelse(terrorism$p1 > 7, 1, 0)
 terrorism$dem <- ifelse(terrorism$qa17a < 3, 1, 0)
@@ -24,16 +69,14 @@ sub.democracy <- democracy[, c("Code", "demscore")]
 sub.terrorism$isocntry <- ifelse(sub.terrorism$isocntry == "DE-E" | sub.terrorism$isocntry == "DE-W", "DE", sub.terrorism$isocntry)
 sub.terrorism$isocntry <- ifelse(sub.terrorism$isocntry == "GB-GBN" | sub.terrorism$isocntry == "GB-NIR", "GB", sub.terrorism$isocntry)
 
-install.packages("countrycode")
 library(countrycode)
 sub.terrorism$Code <- countrycode(sub.terrorism$isocntry, origin = 'iso2c', destination = 'iso3c')
 
 td <- merge(sub.terrorism, sub.democracy)
 
 td$bordering <- ifelse(td$Code == "ITA" | td$Code == "BEL" |td$Code == "LUX" |td$Code == "DEU" |td$Code == "ESP", 1, 0)
-
-## STATISTICA DESCRITTIVA
-
+```
+```{r, echo = FALSE, tidy = TRUE}
 descr <- function(x){
   mean.out <- round(mean(x, na.rm = TRUE), 2)
   sd.out <- round(sd(x, na.rm = TRUE), 2)
@@ -47,31 +90,58 @@ Variables <- c("Democratic support: satisfaction", "Democratic support: personal
 
 mat.variables <- cbind(Variables, rbind(descr(td$dem), descr(td$dem2), descr(td$treatment), descr(td$demscore), descr(td$age), descr(td$bills), descr(td$gender), descr(td$ideology), descr(td$community), descr(td$education), descr(td$bordering)))
 library(knitr)
-kable(mat.variables, digits = 2)
+kable(mat.variables, digits = 2, caption = "Descriptive statistics.")
+```
+
+To test our hypotheses, we use the data from the November 2015 Standard Eurobarometer 84.3, which tracked individuals’ responses in the days before and after the November 13th, 2015 Bataclan terrorist attack in Paris, including their satisfaction for democratic institutions, their support of democracy as a value, and their self-placement on a left-right scale.
+One thing to note, is how the variable for democracy as a perceived personal value may be an informatively weaker variable, as its related question on the survey does not ask respondents for their level of support for democracy, it asks respondents to point to three values perceived as personally most important over a list of 12 possible ones.
+
+On measuring democratic consolidation, the academic literature is split on the matter, but one of the most credited hypotheses on how to measure it is the behavioural hypothesis (Schedler 2001): a democracy is consolidated when it behaves as a democracy, and thus political actors don’t use violence for their ends, elections are free and are respected by the political actors, who also don’t transgress authorities (Linz and Stepan 1996, Diamond 1999). For this reason, to capture these aspects we use the Economist Intelligence Unit’s Democracy Index of 2014 as a proxy for democratic consolidation, as it captures the extent of the working of free and fair elections, and the political respect of authorities measured in the validity of governmental checks and balances (e.g. whether the judiciary is independent and its decisions are enforced).1
 
 
-## TEST IPOTESI
+### Experimental design
 
+We adopted a quasi-experimental study based on the November 13th, 2015 Bataclan terrorist attacks in Paris, constituting an exogenous shock allowing for a natural experiment to take place. The first two hypotheses (H1a, H1b) are analyzed through the before-and-after approach, while the last two (H2a, H2b) use interaction models with techniques resembling a difference-in-difference approach, though without randomized assignment.
+
+The treatment variable is a dichotomous variable, which classifies respondents’ answers on the Eurobarometer survey based on the day of the interview, either before or after the attacks.
+The two main dependent variables are:
+Specific support: satisfaction for democracy, on a scale from 1 (= “very satisfied”) to 4 (= “not at all satisfied”), turned into a dichotomous variable.
+Diffuse support: consideration of democracy as a priority personal value among 12 possible ones to choose from (respondents could choose three among these). As mentioned above, this may render these observations less informative.
+
+The estimated models are OLS models, both those with and without individual controls (for age, gender, education, ideology, geographic proximity to France). For hypotheses H2a and H2b, the interaction terms between treatment and Democracy Score have been added, as well as a third interaction with ideological placement to test the effect’s heterogeneity.
+
+Subnational entities as categorized in the Eurobarometer data (East-West Germany, UK constituent countries) have been aggregated, and the national codes uniformed between databases. The models assume linearity, error independence and homoscedasticity.
+
+
+## Results
+
+### Average treatment effects (ATEs) - H1a and H1b
+
+```{r, tidy = TRUE}
 # H1a
+fit.h1a.nocntrl <- lm(dem ~ treatment, data = td)
 summary(lm(dem ~ treatment, data = td))
-fit.h1a <- lm(dem ~ treatment + age + gender + ideology + community + bills + bordering, data = td)
+fit.h1a <- lm(dem ~ treatment + age + gender + education + ideology + bordering, data = td)
 summary(fit.h1a)
+
 prop.test(table(td$treatment, td$dem))
 tab.dem <- prop.table(table(td$treatment, td$dem), 1)
-#H1b
-summary(lm(dem2 ~ treatment, data = td))
-fit.h1b <- lm(dem2 ~ treatment + age + gender + ideology + bills + community + bordering, data = td)
+
+# H1b
+fit.h1b.nocntrl <- lm(dem2 ~ treatment, data = td)
+summary(fit.h1b.nocntrl)
+fit.h1b <- lm(dem2 ~ treatment + age + gender + education + ideology + bordering, data = td)
 summary(fit.h1b)
+
 prop.test(table(td$treatment, td$dem2)) 
 tab.dem2 <- prop.table(table(td$treatment, td$dem2), 1)
 
-# Grafici
-```{r fig.align='center', fig.width=8, fig.height=4}
 par(mfrow = c(1, 2))
 
 barplot(t(tab.dem),
         beside = TRUE,
         main = "Terrorism and individual satisfaction for democracy",
+        cex.main = 0.7,
         xlab = "Terrorist attack",
         ylab = "Democratic satisfaction",
         xlim = c(0, 5),
@@ -84,9 +154,11 @@ barplot(t(tab.dem),
                            inset = -.27,
                            title = "Democratic satisfaction",
                            cex = 0.7))
+mtext("Figure 1.", side = 1, line = 4, adj = 0, cex = 0.8, font = 3)
 barplot(t(tab.dem2),
         beside = TRUE,
         main = "Terrorism and support for democracy as a value",
+        cex.main = 0.7,
         xlab = "Terrorist attack",
         ylab = "Democracy: personal value",
         xlim = c(0, 5),
@@ -99,13 +171,27 @@ barplot(t(tab.dem2),
                            inset = -.27,
                            title = "Democracy:\n personal value",
                            cex = 0.7))
+mtext("Figure 2.", side = 1, line = 4, adj = 0, cex = 0.8, font = 3)
       
-# H2a
-fit.h2a.controls <- lm(dem ~ treatment * demscore + education + bills + ideology + age + gender + community + bordering, data = td)
-summary(fit.h2a.controls)
-## H2a senza controlli
+```
+
+For hypothesis H1a, the results show how the November 13, 2015 terrorist attack had a statistically significant impact on democratic satisfaction. Model 1, without controls, estimates a coefficient of -0.039 for the treatment (p < 0.001), while Model 2, with controls, confirms said effect with a coefficient of -0.034 (p < 0.001). These values indicate that, individual conditions held equal, respondents have an inferior probability of expressing satisfaction for democracy by 3.5% - 4% if interviewed after the attacks. 
+In the European context, where democratic trust is generally stable, this variation signals that terrorist attacks can represent cognitive and affective shocks, tangibly and immediately impacting civic perceptions.
+
+Figure 1 shows the difference of the answers, pre- and post- treatment: the amount of “satisfied” citizens decreases from 53.5% of the control group to the 49.6% of the treatment group. This drop reflects the vulnerability of democratic trust to traumatic events, supporting the idea that emotional shock and threat perception lead to a revision - albeit temporary - of institutional judgement.
+
+Regarding hypothesis H1b, relative to diffuse support for democracy, a less pronounced effect can be observed, albeit still a significant one. The estimated treatment coefficient in the model with controls is equal to -0.012 (p = 0.047), suggesting that the attacks have slightly reduced the percentage of individuals identifying democracy as one of their personal fundamental values. In absolute terms, Figure 2 shows a drop from 78.2% to 75.6% between the pre- and post- attack groups, equal to a decrease of about 2.6%. Despite the effect being relatively contained, it indicates that terrorist events may harm - although marginally - the level of adhesion to democracy as a value.
+
+
+### Moderating effects: democratic consolidation on specific support - H2a
+
+```{r, tidy = TRUE}
+fit.h2a <- lm(dem ~ treatment * demscore + education + ideology + age + gender + bordering, data = td)
+summary(fit.h2a)
+
 fit.h2a.nocntrl <- lm(dem ~ treatment * demscore, data = td)
 summary(fit.h2a.nocntrl)
+
 t.h2a <- data.frame(demscore = seq(6, 9.5, 0.1), treatment = 1)
 c.h2a <- data.frame(demscore = seq(6, 9.5, 0.1), treatment = 0)
 pred.t.h2a <- predict(fit.h2a.nocntrl, newdata = t.h2a)
@@ -119,10 +205,21 @@ lines(t.h2a$demscore, pred.c.h2a, col = "red")
 legend("bottomright", legend = c("Terrorist attack", "No terrorist attack"), 
        col = c("black", "red"),
        lty = 1)
-## controllo per ideologia, poi doppia interazione
-summary(lm(dem ~ treatment * demscore + ideology, data = td))
-fit.h2a <- lm(dem ~ treatment * demscore * ideology, data = td)
-summary(fit.h2a)
+mtext("Figure 3.", side = 1, line = 4, adj = 0, cex = 0.8, font = 3)
+```
+
+Hypothesis H2a is solidly supported by the data. The interaction between treatment and Democracy Score is positive and highly significant (β = 0.035, p < 0.001). This means that the negative effect of the terrorist shock on democratic satisfaction increases as countries’ democratic consolidation decreases. In more fragile institutional contexts (countries with a lower democracy score, with a minimum of 6.22) there is a greater impact, with a reduction of satisfaction over 6 percentage points. Conversely, in countries with higher scores, the effect is almost absent.
+
+Figure 3 clearly shows this relationship: the lower the democracy score, the more the curve’s slope declines. Thus, democratic consolidation works as a protective buffer: in more robust institutional contexts, the perceived shock does not erode trust, while in weaker contexts it produces intense negative effects. This empirical evidence reinforces theories on democratic resilience and on consolidated institutional systems’ capacity to absorb shocks without compromising public consensus.
+
+
+### Moderating effects: democratic consolidation and political ideology
+
+```{r, tidy = TRUE}
+fit.h2a.id <- lm(dem ~ treatment * demscore * ideology + age + gender + education + bordering, data = td)
+summary(fit.h2a.id)
+fit.h2a.id.nocntrl <- lm(dem ~ treatment * demscore * ideology, data = td)
+summary(fit.h2a.id.nocntrl)
 
 mean(td$ideology[td$ideology < 6], na.rm = TRUE)
 mean(td$ideology[td$ideology > 5], na.rm = TRUE)
@@ -131,11 +228,9 @@ cntrl.h2.sx <- data.frame(demscore = seq(6, 9.5, 0.1), ideology = 3.8, treatment
 treat.h2.dx <- data.frame(demscore = seq(6, 9.5, 0.1), ideology = 7.6, treatment = 1)
 cntrl.h2.dx <- data.frame(demscore = seq(6, 9.5, 0.1), ideology = 7.6, treatment = 0)
 
-pred.diff.sx <- predict(fit.h2a, interval = "confidence", newdata = treat.h2.sx) - predict(fit.h2a, interval = "confidence", newdata = cntrl.h2.sx) 
-pred.diff.dx <- predict(fit.h2a, interval = "confidence", newdata = treat.h2.dx) - predict(fit.h2a, interval = "confidence", newdata = cntrl.h2.dx)
+pred.diff.sx <- predict(fit.h2a.id.nocntrl, interval = "confidence", newdata = treat.h2.sx) - predict(fit.h2a.id.nocntrl, interval = "confidence", newdata = cntrl.h2.sx) 
+pred.diff.dx <- predict(fit.h2a.id.nocntrl, interval = "confidence", newdata = treat.h2.dx) - predict(fit.h2a.id.nocntrl, interval = "confidence", newdata = cntrl.h2.dx)
 
-# Grafici H2a
-```{r fig.align='center', fig.width=8, fig.height=4}
 par(mfrow = c(1, 2))
 
 plot(treat.h2.dx$demscore, pred.diff.sx[, "fit"], type = "l",
@@ -150,6 +245,7 @@ legend("bottomright", legend = c("Prediction line", "Confidence bands", "ATE = 0
        lty = c(1, 5, 3),
        cex = 0.6)
 abline(h = 0, col = "red", lty = 3)
+mtext("Figure 4.", side = 1, line = 4, adj = 0, cex = 0.8, font = 3)
 plot(treat.h2.dx$demscore, pred.diff.dx[, "fit"], type = "l",
      ylim = c(-0.11, 0.09),
      xlab = "Democracy score",
@@ -162,26 +258,34 @@ legend("bottomright", legend = c("Prediction line", "Confidence bands", "ATE = 0
        lty = c(1, 5, 3),
        cex = 0.6)
 abline(h = 0, col = "red", lty = 3)
+mtext("Figure 5. ", side = 1, line = 4, adj = 0, cex = 0.8, font = 3)
 
 ```
 
+The extended model (Model 3) introduces a triple interaction between treatment, democracy score and ideological placement, revealing complex albeit interesting dynamics. Although the triple interaction does not amount to a conventional statistical significance (p = 0.100), the double interaction between democracy score and ideological placement reveals to be highly significant (p < 0.001). This suggests that the effect of the shock is not uniformly distributed among individuals, but it varies based on their ideological orientation and the institutional context in which they live.
 
-```{r}
+In particular, the negative effect of the shock is greater among individuals with more right-leaning political positions in countries with a lower level of democratic consolidation. This group shows a greater sensibility to the traumatic event, likely linked to a lower tolerance towards instability and a more critical view of the political system (this being given by the institutional context). Figure 4 highlights this heterogeneity: conservatives in less democratic countries show a marked drop in democratic satisfaction, while the reaction to the shock is more contained among left-leaning individuals. The flat curve of left-leaning individuals suggests a greater degree of ideological and symbolic resilience.
+
+
+### Moderating effects: democratic consolidation on diffuse support - H2b
+
+```{r, tidy = TRUE}
 # H2b
-fit.h2b.controls <- lm(dem2 ~ treatment * demscore + education + bills + ideology + age + gender + community + bordering, data = td)
-summary(fit.h2b.controls)
-fit.h2b <- lm(dem2 ~ treatment * demscore, data = td)
+fit.h2b <- lm(dem2 ~ treatment * demscore + education + ideology + age + gender + bordering, data = td)
 summary(fit.h2b)
+fit.h2b.nocntrl <- lm(dem2 ~ treatment * demscore, data = td)
+summary(fit.h2b.nocntrl)
+
 treat.h2b <- data.frame(demscore = seq(5.5, 9.5, 0.1), treatment = 1)
 cntrl.h2b <- data.frame(demscore = seq(5.5, 9.5, 0.1), treatment = 0)
 
-pred.diff.h2b <- predict(fit.h2b, interval = "confidence", newdata = treat.h2b) - predict(fit.h2b, interval = "confidence", newdata = cntrl.h2b)
+pred.diff.h2b <- predict(fit.h2b.nocntrl, interval = "confidence", newdata = treat.h2b) - predict(fit.h2b.nocntrl, interval = "confidence", newdata = cntrl.h2b)
 
 # Grafico H2b
 plot(treat.h2b$demscore, pred.diff.h2b[, "fit"], type = "l",
      ylim = c(-0.03, 0.01),
      xlab = "Democracy score",
-     ylab = "ATE - dmocracy: personal value",
+     ylab = "ATE - democracy: personal value",
      main = "Terrorism and democracy as a personal value by country's democracy score")
 lines(treat.h2b$demscore, pred.diff.h2b[, "lwr"], col = "red", lty = 5)
 lines(treat.h2b$demscore, pred.diff.h2b[, "upr"], col = "red", lty = 5)
@@ -190,23 +294,100 @@ legend("bottomright", legend = c("Prediction line", "Confidence bands", "ATE = 0
        lty = c(1, 5, 3),
        cex = 0.7)
 abline(h = 0, lty = 3)
+mtext("Figure 6.", side = 1, line = 4, adj = 0, cex = 0.8, font = 3)
 
 ```
 
-TABELLA RISULTATI
-```{r}
+Hypothesis H2b receives only partial support. The interaction between treatment and democracy score is not significant (p = 0.476), indicating that the centrality of democracy as a personal value does not seem to be systematically influenced by the institutional context. In other words, the terrorist trauma does not substantially alter democracy as a value as a function of countries’ democratic consolidation.
+
+However, treatment aside, we find the main effect of the democracy score to be highly significant (b = 0.023, p < 0.001). This result shows that in countries with more consolidated democratic systems, citizens more likely tend to consider democracy a fundamental value of their civic identity, regardless of shock. The political culture rooted in these contexts favours a more interiorized, more structural vision of democracy, resilient to disturbing events.
+
+Figure 5 shows a flat ATE, which slightly ascends in countries with a higher democracy score, without variation between pre- and post- attack. This confirms that diffuse support is less vulnerable to contingent dynamics relative to specific support, thus appearing as more stable and more deeply rooted. This result suggests that the promotion of a solid civic culture is crucial for long-term democratic resilience.
+
+```{r, echo = FALSE, tidy = TRUE}
 
 library(modelsummary)
 models <- list(
-  "Model 1" = fit.h1a.nocntrl,
-  "Model 2" = fit.h2a.nocntrl,
-  "Model 3" = fit.h2a,
-  "Model 4" = fit.h1b.nocntrl,
+  "Model 1" = fit.h1a,
+  "Model 2" = fit.h2a,
+  "Model 3" = fit.h2a.id,
+  "Model 4" = fit.h1b,
   "Model 5" = fit.h2b
 )
 modelsummary(models, estimate = "{estimate}{stars}",
              coef_omit = "Intercept",
              statistic = "({std.error})",
+             title = "Regression models. Note: Models one, two and three are calculated on the dependent variable 'democratic satisfaction', while models four and five relate to the dependent variable 'democracy as a personal value'.",
              output = "markdown")
+
+```
+
+## Synopsis of the results
+
+On the whole, the empirical results confirm the hypothesis that terrorist attacks can erode democratic support, particularly in its institutional dimension (that of satisfaction for the working of its institutions). This impact is strongly moderated by institutional context (seen through the lens of democratic consolidation), and partly by individuals’ psychological profile.
+Resilience to trauma manifests itself less in its “values” dimension, appearing more stable. However, in this case too we observe signs of erosion in less democratic contexts, worthy of further investigation.
+
+## Conclusion and discussion
+
+The present study aimed at analysing the impact of terrorist attacks on support for democracy, and did so studying a single terrorist attack, the November 13th, 2015 Bataclan terrorist attack. Support for democracy was studied by distinguishing two fundamental forms of support - specific and diffuse; and finally, the moderating role of democratic consolidation and individual ideology was evaluated. The results confirm that a terrorist attack can erode trust towards democratic institutions’ functioning (specific support), with statistically significant and substantially relevant effects. Conversely, adherence to democratic values (diffuse support) appears more resilient, with weaker and less stable effects.
+
+The degree of democratic consolidation emerges as a key variable in explaining post- attack reactions: in less-consolidated democratic regimes, vulnerability to democratic disaffection is significantly higher. Particularly, individuals with a more right-leaning ideology appear more prone to react with distrust towards democracy in more fragile contexts. This suggests that a lack of democratic capital can not only let shocks have an effect, but it can amplify these.
+
+However, the study has some limitations. Firstly, the use of observational data and the absence of randomized assignment warrant caution in causal inference. Despite the quasi-experimental design and the use of an unexpected event increase the plausibility of the effects, it is not possible to completely exclude biases given by unobserved factors.
+Secondly, the measure for diffuse support is based on a deliberate choice of “democracy” as a personal value out of a list of 12 possible ones, which may not capture with precision the depth of normative adherence to said value. Furthermore, the transformation of the dependent variable of specific support into a dichotomous variable may have reduced the internal variability and the sensitivity of the model.
+
+In light of these considerations, we suggest that future studies may expand the analysis in at least three directions. To begin with, this model could be replicated with all terrorist attacks- for example, Berlin (2016), Brussels (2016) or London (2017) - to test the robustness and the generalizability of the effects. Secondly, the integration of longitudinal indicators may allow the evaluation of the duration of the impact through time, distinguishing between immediate and persistent effects. Thirdly, a qualitative complementary analysis, through focus groups or interviews- might explore the underlying reasons for democracy’s (de)legitimization in post-traumatic contexts.
+
+In conclusion, the present study contributes to and wishes to contribute to the debate on democratic resilience in Europe, highlighting how terrorist attacks can undermine not only physical safety, but the institutional and symbolic ones too.
+Regime quality and citizens’ value orientation work as barriers or facilitators of such an erosion. To understand these mechanisms is crucial to reinforce democracies in front of ever-more-complex future challenges.
+
+
+## Notes
+
+1 Since the EIU collects data until the last day of December, we used data from the year prior to the attacks (2014) to avoid the index being indirectly altered by the attacks themselves.
+
+
+## References
+
+Andersen, R. and Brym, R. (2017), How Terrorism Affects Attitudes toward Democracy: Tunisia in 2015. Canadian Review of Sociology/Revue canadienne de sociologie, 54: 519-529. https://doi.org/10.1111/cars.12175
+
+Balcells, L. and Torrats-Espinosa G. (2018), Using a natural experiment to estimate the electoral consequences of terrorist attacks. Proceedings of the National Academy of Sciences, 115(42): 10624–10629. doi: 10.1073/pnas.1800302115 
+
+Chalk, P. (1998), The Response to Terrorism as a Threat to Liberal Democracy. Australian Journal of Politics & History, 44: 373-388. https://doi.org/10.1111/1467-8497.00027
+
+Christmann, Pablo (2018), Economic performance, quality of democracy and satisfaction with democracy. Electoral Studies, 53: 79-89. https://doi.org/10.1016/j.electstud.2018.04.004
+
+Cordero, G. & Simón, P. (2016), Economic Crisis and Support for Democracy in Europe, West European Politics, 39(2): 305-325. https://doi.org/10.1080/01402382.2015.1075767
+
+Crenshaw, M. (2001) The Causes of Terrorism. Comparative Politics, 13, 379-399. 
+http://dx.doi.org/10.2307/421717
+
+Chong, A. and Gradstein, M. (2015), On Education and Democratic Preferences. Econ Polit, 27: 362-388. https://doi.org/10.1111/ecpo.12061
+
+Diamond, Larry (1999). Developing Democracy: Toward Consolidation. Baltimore and London: The Johns Hopkins University Press.
+
+Easton, David (1975). A Re-assessment of the Concept of Political Support. British Journal of Political Science, 5:04, 435–57
+
+Echebarria-Echabe, A., & Fernández-Guede, E. (2006). Effects of terrorism on attitudes and ideological orientation. European Journal of Social Psychology, 36(2), 259–265. https://doi.org/10.1002/ejsp.294
+
+Ferrín, M., Mancosu, M. and Cappiali, T.M. (2020), Terrorist attacks and Europeans’ attitudes towards immigrants: An experimental approach. European Journal of Political Research, 59: 491-516. https://doi.org/10.1111/1475-6765.12362
+
+Gunther, R., Diamandourous, P. N. and Puhle (1995), eds., The Politics of Democratic Consolidation: Southern Europe in Comparative Politics, Baltimore: Johns Hopkins University Press.
+
+Imai, Kosuke (2017). Quantitative Social Science: An Introduction. Princeton University Press.
+
+Linz, Juan J. and Stepan, Alfred (1996). Problems of democratic transition and consolidation: Southern Europe, South America, and postcommunist Europe. Baltimore: Johns Hopkins University Press.
+
+Nägel, C., Nivette, A. and Czymara, C. (2024), Do jihadist terrorist attacks cause changes in institutional trust? A multi-site natural experiment. European Journal of Political Research, 63: 411-432. https://doi.org/10.1111/1475-6765.12612
+
+Schedler, A. Measuring Democratic Consolidation. St Comp Int Dev 36, 66–92 (2001). https://doi.org/10.1007/BF02687585
+
+Stoetzer, L.F., Kroh, M. and Dasey, L. (2024), The backlash against free movement: Does EU-internal migration fuel public concerns about immigration?. European Journal of Political Research, 63: 1578-1600. https://doi.org/10.1111/1475-6765.12666
+
+Svolik, M. (2008), Authoritarian Reversals and Democratic Consolidation. The American Political Science Review, 102(2), 153–168. http://www.jstor.org/stable/27644508
+
+Van Hauwaert, S. M. & Huber, R. A. (2020), In-group solidarity or out-group hostility in response to terrorism in France? Evidence from a regression discontinuity design, European Journal of Political Research, 59: 936-953. doi: 10.1111/1475-6765.12380
+
+Wilkinson, P. (2011), Terrorism Versus Democracy. The Liberal State Response. London and New York: Routledge
 
 
